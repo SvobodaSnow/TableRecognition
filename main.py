@@ -40,7 +40,7 @@ def analyze(start_point):
     else:
         return TypeElement.LINE_H
     for i in range(r_v):
-        if not is_black(imageToMatrices[start_point.y, start_point.x + i]):
+        if not is_black(imageToMatrices[start_point.y + i, start_point.x]):
             break
     else:
         return TypeElement.LINE_V
@@ -53,6 +53,33 @@ def analyze(start_point):
             return TypeElement.TEXT
     return TypeElement.UNLABELLED
 
+
+def get_horizontal_node(start_node, displacement, direction=Direction.DIRECT):
+    if direction == Direction.DIRECT:
+        delta = 1
+    elif direction == Direction.REVERSE:
+        delta = -1
+    else:
+        return None
+
+    x = start_node.x
+    y = start_node.y + displacement
+
+    t = None
+
+    while True:
+        x += delta
+        if is_black(imageToMatrices[y, x]):
+            print(x, y, t := analyze(Point(x, y)))
+            pass
+        if t is not None:
+            break
+    return
+
+
+def get_vertical_node(start_node):
+
+    return
 
 def get_table(start_point):
     step = 0
@@ -77,10 +104,10 @@ def get_table(start_point):
             step = step * 2
             break
 
-    while True:
-        step_x = step
-        step_y = 0
+    search_cell_point = left_top_point
 
+    while True:
+        get_horizontal_node(search_cell_point, step)
         break
     return
 

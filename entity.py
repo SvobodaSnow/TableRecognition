@@ -9,6 +9,11 @@ class TypeElement(Enum):
     TABLE = 4
 
 
+class Direction(Enum):
+    DIRECT = 0
+    REVERSE = 1
+
+
 class Point:
     def __init__(self, x=-1, y=-1):
         self.x = int(x)
