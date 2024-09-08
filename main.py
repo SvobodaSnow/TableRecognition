@@ -56,14 +56,32 @@ def analyze(start_point):
 
 def get_table(start_point):
     step = 0
-    first_white = start_point
+    step_x = 0
+    step_y = 0
+
+    left_top_point = Point()
+
+    while True:
+        if is_black(imageToMatrices[start_point.y - step_y, start_point.x - step_x]):
+            step_x += 1
+        else:
+            step_y += 1
+            if not is_black(imageToMatrices[start_point.y - step_y, start_point.x - step_x + 1]):
+                left_top_point.y = start_point.y - step_y + 1
+                left_top_point.x = start_point.x - step_x + 1
+                break
+
     while True:
         step += 1
-        if not is_black(imageToMatrices[start_point.y + step, start_point.x + step]):
-            first_white = Point(start_point.x + step, start_point.y + step)
+        if not is_black(imageToMatrices[left_top_point.y + step, left_top_point.x + step]):
+            step = step * 2
             break
-    for i in range(imageToMatrices.shape[1]):
-        print(imageToMatrices.shape[1])
+
+    while True:
+        step_x = step
+        step_y = 0
+
+        break
     return
 
 
@@ -88,4 +106,4 @@ if __name__ == '__main__':
                 break
 
     if type_o is TypeElement.LINE_V or type_o is TypeElement.LINE_H:
-        get_table(start_p, type_o)
+        get_table(p_b)

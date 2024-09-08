@@ -10,13 +10,21 @@ class TypeElement(Enum):
 
 
 class Point:
-    def __init__(self, x, y):
+    def __init__(self, x=-1, y=-1):
         self.x = int(x)
         self.y = int(y)
 
 
 class Cell:
-    def __init__(self, start_cell, end_cell, content_type=TypeElement.UNLABELLED):
+    def __init__(self, start_cell, end_cell=Point(), content_type=TypeElement.UNLABELLED, content=None):
         self.start_cell = start_cell
         self.end_cell = end_cell
         self.content_type = content_type
+        self.content = content
+
+
+class Table:
+    def __init__(self, start_table, end_table):
+        self.start_table = start_table
+        self.end_table = end_table
+        self.cells_table = []
