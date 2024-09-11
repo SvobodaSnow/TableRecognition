@@ -63,24 +63,45 @@ def get_horizontal_node(start_node, displacement, direction=Direction.DIRECT):
         return None
 
     x = start_node.x
-    y = start_node.y + displacement
+    y = start_node.y
+    y_d = start_node.y + displacement
 
     t = None
 
     while True:
         x += delta
-        if is_black(imageToMatrices[y - displacement, x]):
-            if is_black(imageToMatrices[y, x]):
-                t = analyze(Point(x, y))
+        if is_black(imageToMatrices[y, x]):
+            if is_black(imageToMatrices[y_d, x]):
+                t = analyze(Point(x, y_d))
                 if t is not TypeElement.UNLABELLED and t is not TypeElement.TEXT:
-                    return Point(x, y - displacement)
+                    return Point(x, y)
         else:
-            return
+            return None
 
 
-def get_vertical_node(start_node):
+def get_vertical_node(start_node, displacement, direction=Direction.DIRECT):
+    if direction == Direction.DIRECT:
+        delta = 1
+    elif direction == Direction.REVERSE:
+        delta = -1
+    else:
+        return None
 
-    return
+    x = start_node.x
+    y = start_node.y
+    x_d = start_node.x + displacement
+
+    t = None
+
+    while True:
+        y += delta
+        if is_black(imageToMatrices[y, x]):
+            if is_black(imageToMatrices[y, x_d]):
+                t = analyze(Point(x_d, y))
+                if t is not TypeElement.UNLABELLED and t is not TypeElement.TEXT:
+                    return Point(x, y)
+        else:
+            return None
 
 
 def get_table(start_point):
@@ -115,7 +136,7 @@ def get_table(start_point):
 
         break
 
-    return
+    return new_table
 
 
 if __name__ == '__main__':
@@ -139,4 +160,4 @@ if __name__ == '__main__':
                 break
 
     if type_o is TypeElement.LINE_V or type_o is TypeElement.LINE_H:
-        get_table(p_b)
+        print(get_table(p_b))

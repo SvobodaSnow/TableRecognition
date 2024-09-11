@@ -31,7 +31,8 @@ class Cell:
         self.content = content
 
     def __str__(self):
-        pass
+        return ("Начальная точка: " + str(self.start_cell) + "\nКонечная точка: " + str(self.end_cell) + "\nТип "
+                                    "содержимого: " + str(self.content_type) + "\nСодержимое: " + str(self.content))
 
 
 class Table:
@@ -41,4 +42,4 @@ class Table:
         self.cells_table = []
 
     def __str__(self):
-        pass
+        return "Начальная точка: " + str(self.start_table) + "\nКонечная точка: " + str(self.end_table)
