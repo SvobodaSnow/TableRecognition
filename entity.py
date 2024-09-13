@@ -7,6 +7,7 @@ class TypeElement(Enum):
     LINE_V = 2
     TEXT = 3
     TABLE = 4
+    CELL = 5
 
 
 class Direction(Enum):

@@ -74,7 +74,7 @@ def get_horizontal_node(start_node, displacement, direction=Direction.DIRECT):
             if is_black(imageToMatrices[y_d, x]):
                 t = analyze(Point(x, y_d))
                 if t is not TypeElement.UNLABELLED and t is not TypeElement.TEXT:
-                    return Point(x, y), TypeElement.TABLE
+                    return Point(x, y), TypeElement.CELL
         else:
             return Point(x, y), TypeElement.LINE_H
 
@@ -104,7 +104,7 @@ def get_vertical_node(start_node, displacement, direction=Direction.DIRECT):
             return None
 
 
-def get_table(start_point):
+def get_element(start_point):
     step = 0
     step_x = 0
     step_y = 0
@@ -127,12 +127,19 @@ def get_table(start_point):
             step = step * 2
             break
 
-    new_element = None
+    new_element = []
+    i, j = 1, 1
 
     while True:
-        # right_top_point_cell = get_horizontal_node(left_top_point, step)
+
         answer = get_horizontal_node(left_top_point, step)
-        print(get_horizontal_node(left_top_point, step)[1])
+        if answer[1] == TypeElement.CELL:
+            new_component = Cell(left_top_cell=left_top_point, right_top_cell=answer[0])
+        elif answer[1] == TypeElement.LINE_H:
+            new_component = Line(start_line=left_top_point, end_line=answer[0])
+
+        new_element[str(i) + "|" + str(j)] = new_component
+
         break
 
     return new_element
@@ -159,4 +166,4 @@ if __name__ == '__main__':
                 break
 
     if type_o is TypeElement.LINE_V or type_o is TypeElement.LINE_H:
-        print(get_table(p_b))
+        print(get_element(p_b))
