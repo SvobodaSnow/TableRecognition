@@ -74,9 +74,9 @@ def get_horizontal_node(start_node, displacement, direction=Direction.DIRECT):
             if is_black(imageToMatrices[y_d, x]):
                 t = analyze(Point(x, y_d))
                 if t is not TypeElement.UNLABELLED and t is not TypeElement.TEXT:
-                    return Point(x, y)
+                    return Point(x, y), TypeElement.TABLE
         else:
-            return None
+            return Point(x, y), TypeElement.LINE_H
 
 
 def get_vertical_node(start_node, displacement, direction=Direction.DIRECT):
@@ -127,16 +127,15 @@ def get_table(start_point):
             step = step * 2
             break
 
-    search_cell_point = left_top_point
-    new_table = Table(start_table=left_top_point)
+    new_element = None
 
     while True:
-        new_cell = Cell(start_cell=search_cell_point)
-        right_top_point_cell = get_horizontal_node(search_cell_point, step)
-
+        # right_top_point_cell = get_horizontal_node(left_top_point, step)
+        answer = get_horizontal_node(left_top_point, step)
+        print(get_horizontal_node(left_top_point, step)[1])
         break
 
-    return new_table
+    return new_element
 
 
 if __name__ == '__main__':

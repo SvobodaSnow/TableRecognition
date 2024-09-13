@@ -24,9 +24,19 @@ class Point:
 
 
 class Cell:
-    def __init__(self, start_cell=Point(), end_cell=Point(), content_type=TypeElement.UNLABELLED, content=None):
-        self.start_cell = start_cell
-        self.end_cell = end_cell
+    def __init__(
+            self,
+            left_top_cell=Point(),
+            right_top_cell=Point(),
+            left_bottom_cell=Point(),
+            right_bottom_cell=Point(),
+            content_type=TypeElement.UNLABELLED,
+            content=None
+    ):
+        self.left_top_cell = left_top_cell
+        self.right_top_cell = right_top_cell
+        self.left_bottom_cell = left_bottom_cell
+        self.right_bottom_cell = right_bottom_cell
         self.content_type = content_type
         self.content = content
 
@@ -43,3 +53,9 @@ class Table:
 
     def __str__(self):
         return "Начальная точка: " + str(self.start_table) + "\nКонечная точка: " + str(self.end_table)
+
+
+class Line:
+    def __init__(self, start_line=Point, end_line=Point()):
+        self.start_line = start_line
+        self.end_line = end_line
