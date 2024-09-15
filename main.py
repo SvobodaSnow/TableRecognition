@@ -1,8 +1,11 @@
 import math
 from statistics import mean
 
-from PIL import Image
 import numpy as np
+from PIL import Image
+# В консоль для установки:
+# conda install -c conda-forge python-docx
+import docx
 
 from entity import *
 
@@ -55,18 +58,11 @@ def analyze(start_point):
 
 
 def get_horizontal_node(start_node, displacement, direction=Direction.DIRECT):
-    if direction == Direction.DIRECT:
-        delta = 1
-    elif direction == Direction.REVERSE:
-        delta = -1
-    else:
-        return None
+    delta = direction.value
 
     x = start_node.x
     y = start_node.y
-    y_d = start_node.y + displacement
-
-    t = None
+    y_d = y + displacement
 
     while True:
         x += delta
@@ -80,18 +76,11 @@ def get_horizontal_node(start_node, displacement, direction=Direction.DIRECT):
 
 
 def get_vertical_node(start_node, displacement, direction=Direction.DIRECT):
-    if direction == Direction.DIRECT:
-        delta = 1
-    elif direction == Direction.REVERSE:
-        delta = -1
-    else:
-        return None
+    delta = direction.value
 
     x = start_node.x
-    y = start_node.y
-    x_d = start_node.x + displacement
-
-    t = None
+    y = start_node.y + displacement
+    x_d = x + displacement
 
     while True:
         y += delta
@@ -99,9 +88,9 @@ def get_vertical_node(start_node, displacement, direction=Direction.DIRECT):
             if is_black(imageToMatrices[y, x_d]):
                 t = analyze(Point(x_d, y))
                 if t is not TypeElement.UNLABELLED and t is not TypeElement.TEXT:
-                    return Point(x, y)
+                    return Point(x, y), TypeElement.CELL
         else:
-            return None
+            return Point(x, y), TypeElement.LINE_V
 
 
 def get_element(start_point):
@@ -127,20 +116,38 @@ def get_element(start_point):
             step = step * 2
             break
 
-    new_element = []
+    new_element = {}
     i, j = 1, 1
 
     while True:
 
         answer = get_horizontal_node(left_top_point, step)
+
         if answer[1] == TypeElement.CELL:
-            new_component = Cell(left_top_cell=left_top_point, right_top_cell=answer[0])
+            new_element[str(i) + "|" + str(j)] = Cell(left_top_cell=left_top_point, right_top_cell=answer[0])
         elif answer[1] == TypeElement.LINE_H:
-            new_component = Line(start_line=left_top_point, end_line=answer[0])
+            new_element[str(i) + "|" + str(j)] = Line(start_line=left_top_point, end_line=answer[0])
+            return new_element
 
-        new_element[str(i) + "|" + str(j)] = new_component
+        answer = get_vertical_node(left_top_point, step)
 
-        break
+        if answer[1] == TypeElement.CELL:
+            new_element[str(i) + "|" + str(j)].left_bottom_cell = answer[0]
+            new_element[str(i) + "|" + str(j)].right_bottom_cell = Point(
+                x=new_element[str(i) + "|" + str(j)].right_top_cell.x,
+                y=new_element[str(i) + "|" + str(j)].left_bottom_cell.y
+            )
+        elif answer[1] == TypeElement.LINE_V:
+            new_element[str(i) + "|" + str(j)] = Line(start_line=left_top_point, end_line=answer[0])
+            return new_element
+
+        print(new_element[str(i) + "|" + str(j)])
+
+        if is_black(imageToMatrices[new_element[str(i) + "|" + str(j)].right_top_cell.y, new_element[str(i) + "|" + str(j)].right_top_cell.x + (step // 2)]):
+            left_top_point = new_element[str(i) + "|" + str(j)].right_top_cell
+            j += 1
+        else:
+            break
 
     return new_element
 

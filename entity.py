@@ -11,8 +11,8 @@ class TypeElement(Enum):
 
 
 class Direction(Enum):
-    DIRECT = 0
-    REVERSE = 1
+    DIRECT = 1
+    REVERSE = -1
 
 
 class Point:
@@ -22,6 +22,10 @@ class Point:
 
     def __str__(self):
         return 'x: ' + str(self.x) + '\t\t' + 'y: ' + str(self.y)
+
+
+    def new_point_add(self, x=0, y=0):
+        return Point(self.x + x, self.y + y)
 
 
 class Cell:
@@ -42,15 +46,19 @@ class Cell:
         self.content = content
 
     def __str__(self):
-        return ("Начальная точка: " + str(self.start_cell) + "\nКонечная точка: " + str(self.end_cell) + "\nТип "
-                                    "содержимого: " + str(self.content_type) + "\nСодержимое: " + str(self.content))
+        return ("Левая верхняя точка: " + str(self.left_top_cell) + "\n" +
+                "Правая верхняя точка: " + str(self.right_top_cell) + "\n" +
+                "Левая нижняя точка: " + str(self.left_bottom_cell) + "\n" +
+                "Правая нижняя точка: " + str(self.right_bottom_cell) + "\n" +
+                "Тип содержимого: " + str(self.content_type) + "\n" +
+                "Содержимое: " + str(self.content))
 
 
 class Table:
     def __init__(self, start_table=Point(), end_table=Point()):
         self.start_table = start_table
         self.end_table = end_table
-        self.cells_table = []
+        self.cells_table = {}
 
     def __str__(self):
         return "Начальная точка: " + str(self.start_table) + "\nКонечная точка: " + str(self.end_table)
