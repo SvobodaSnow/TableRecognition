@@ -3,15 +3,18 @@ from statistics import mean
 
 import numpy as np
 from PIL import Image
-# В консоль для установки:
-# conda install -c conda-forge python-docx
-import docx
+from spire.doc import *
+from spire.doc.common import *
 
 from entity import *
 
 img = Image.open('TEST.png')
 imageToMatrices = np.asarray(img)
 isHorizontal = True
+
+doc = Document()
+section = doc.AddSection()
+
 k = 1
 r = 1
 
@@ -152,6 +155,30 @@ def get_element(start_point):
     return new_element
 
 
+def test_add_table():
+    table = Table(doc, True)
+
+    table.PreferredWidth = PreferredWidth(WidthType.Percentage, int(100))
+
+    row = table.AddRow(3)
+    row.Height = 20.0
+    # Add the second row
+    row = table.AddRow()
+    row.Height = 20.0
+
+    for i in range(table.Rows.Count):
+        row = table.Rows[i]
+        row.AddCell()
+
+    # Add the table to the section
+    section.Tables.Add(table)
+
+    # Save the document
+    doc.SaveToFile("CreateTable.docx")
+    doc.Close()
+    return
+
+
 if __name__ == '__main__':
     r = int((((imageToMatrices.shape[1] * imageToMatrices.shape[0]) * 0.001) ** 0.5) // 2)
     type_o = TypeElement.UNLABELLED
@@ -174,3 +201,5 @@ if __name__ == '__main__':
 
     if type_o is TypeElement.LINE_V or type_o is TypeElement.LINE_H:
         print(get_element(p_b))
+
+    test_add_table()

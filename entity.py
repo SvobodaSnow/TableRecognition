@@ -54,11 +54,13 @@ class Cell:
                 "Содержимое: " + str(self.content))
 
 
-class Table:
-    def __init__(self, start_table=Point(), end_table=Point()):
+class TableSerialize:
+    def __init__(self, start_table=Point(), end_table=Point(), row=1, column=1):
         self.start_table = start_table
         self.end_table = end_table
         self.cells_table = {}
+        self.row = row
+        self.column = column
 
     def __str__(self):
         return "Начальная точка: " + str(self.start_table) + "\nКонечная точка: " + str(self.end_table)
