@@ -7,8 +7,9 @@ from spire.doc import *
 from spire.doc.common import *
 
 from entity import *
+from OCR import *
 
-img = Image.open('TEST.png')
+img = Image.open('TEST_1.png')
 imageToMatrices = np.asarray(img)
 isHorizontal = True
 
@@ -155,27 +156,18 @@ def get_element(start_point):
     return new_element
 
 
-def test_add_table():
-    table = Table(doc, True)
-
-    table.PreferredWidth = PreferredWidth(WidthType.Percentage, int(100))
-
-    row = table.AddRow(3)
-    row.Height = 20.0
-    # Add the second row
-    row = table.AddRow()
-    row.Height = 20.0
-
-    for i in range(table.Rows.Count):
-        row = table.Rows[i]
-        row.AddCell()
-
-    # Add the table to the section
-    section.Tables.Add(table)
-
-    # Save the document
-    doc.SaveToFile("CreateTable.docx")
-    doc.Close()
+def filling_elements(element: {}):
+    for t in element:
+        cell = element[t]
+        cell.content = string_from_image(
+            img.crop(
+                (cell.left_top_cell.x * 1.01,
+                 cell.left_top_cell.y * 1.01,
+                 cell.right_bottom_cell.x * 1.01,
+                 cell.right_bottom_cell.y * 1.01)
+            )
+        )
+        print(cell)
     return
 
 
@@ -200,6 +192,4 @@ if __name__ == '__main__':
                 break
 
     if type_o is TypeElement.LINE_V or type_o is TypeElement.LINE_H:
-        print(get_element(p_b))
-
-    test_add_table()
+        filling_elements(el := get_element(p_b))
