@@ -55,15 +55,29 @@ class Cell:
 
 
 class TableSerialize:
-    def __init__(self, start_table=Point(), end_table=Point(), row=1, column=1):
+    def __init__(self, start_table=Point(), end_table=Point(), cells_table=None, row=1, column=1):
+        if cells_table is None:
+            cells_table = {}
         self.start_table = start_table
         self.end_table = end_table
-        self.cells_table = {}
+        self.cells_table = cells_table
         self.row = row
         self.column = column
 
     def __str__(self):
-        return "Начальная точка: " + str(self.start_table) + "\nКонечная точка: " + str(self.end_table)
+        return ("Начальная точка: " + str(self.start_table) + "\n" +
+                "Конечная точка: " + str(self.end_table) + "\n" +
+                "Ячейки: \n" + self.cells_table_to_string() + "\n" +
+                "Строк: " + str(self.row) + "\n" +
+                "Колонок: " + str(self.column)
+                )
+
+
+    def cells_table_to_string(self):
+        s = ""
+        for e in self.cells_table.keys():
+            s += e + "\n" + str(self.cells_table[e]) + "\n"
+        return s[:-1]
 
 
 class Line:

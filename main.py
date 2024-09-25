@@ -9,12 +9,10 @@ from spire.doc.common import *
 from entity import *
 from OCR import *
 
-img = Image.open('TEST_1.png')
+name_img = "TEST_1.png"
+img = Image.open(name_img)
 imageToMatrices = np.asarray(img)
 isHorizontal = True
-
-doc = Document()
-section = doc.AddSection()
 
 k = 1
 r = 1
@@ -120,6 +118,10 @@ def get_element(start_point):
             step = step * 2
             break
 
+    new_table = TableSerialize(
+        start_table=left_top_point
+    )
+
     new_element = {}
     i, j = 1, 1
 
@@ -137,15 +139,14 @@ def get_element(start_point):
 
         if answer[1] == TypeElement.CELL:
             new_element[str(i) + "|" + str(j)].left_bottom_cell = answer[0]
-            new_element[str(i) + "|" + str(j)].right_bottom_cell = Point(
+            end_point = Point(
                 x=new_element[str(i) + "|" + str(j)].right_top_cell.x,
                 y=new_element[str(i) + "|" + str(j)].left_bottom_cell.y
             )
+            new_element[str(i) + "|" + str(j)].right_bottom_cell = end_point
         elif answer[1] == TypeElement.LINE_V:
             new_element[str(i) + "|" + str(j)] = Line(start_line=left_top_point, end_line=answer[0])
             return new_element
-
-        print(new_element[str(i) + "|" + str(j)])
 
         if is_black(imageToMatrices[new_element[str(i) + "|" + str(j)].right_top_cell.y, new_element[str(i) + "|" + str(j)].right_top_cell.x + (step // 2)]):
             left_top_point = new_element[str(i) + "|" + str(j)].right_top_cell
@@ -153,7 +154,12 @@ def get_element(start_point):
         else:
             break
 
-    return new_element
+    new_table.cells_table = new_element
+    new_table.end_table = end_point
+    new_table.column = j
+    new_table.row = i
+
+    return new_table
 
 
 def filling_elements(element: {}):
@@ -167,7 +173,27 @@ def filling_elements(element: {}):
                  cell.right_bottom_cell.y * 1.01)
             )
         )
-        print(cell)
+    return
+
+
+def create_word():
+    name_document = name_img[:name_img.rfind(".")] + ".docx"
+
+    doc = Document()
+    section = doc.AddSection()
+
+    table = Table(doc, True)
+    table.PreferredWidth = PreferredWidth(WidthType.Percentage, int(100))
+
+    table.TableFormat.Borders.BorderType = BorderStyle.Single
+    table.TableFormat.Borders.Color = Color.get_Black()
+
+    row = table.AddRow(False, 1)
+    row.Height = 20.0
+
+    section.Tables.Add(table)
+    doc.SaveToFile(name_document)
+    doc.Close()
     return
 
 
@@ -192,4 +218,7 @@ if __name__ == '__main__':
                 break
 
     if type_o is TypeElement.LINE_V or type_o is TypeElement.LINE_H:
-        filling_elements(el := get_element(p_b))
+        el = get_element(p_b)
+        filling_elements(el.cells_table)
+
+    create_word()
