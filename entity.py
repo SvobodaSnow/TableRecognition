@@ -84,3 +84,25 @@ class Line:
     def __init__(self, start_line=Point, end_line=Point()):
         self.start_line = start_line
         self.end_line = end_line
+
+
+class IDElement:
+    def __init__(self, position: Point, type_element: TypeElement):
+        self.position = position
+        self.type_element = type_element
+
+    def __str__(self):
+        return "Позиция: " + str(self.position) + "\nТип элемента: " + str(self.type_element)
+
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return False
+        if (self.type_element == other.type_element and
+            abs(self.position.x - other.position.x) <= 5 and
+            abs(self.position.y - other.position.y) <= 5):
+            return True
+        else:
+            return False
+
+    def __hash__(self):
+        return 1

@@ -13,6 +13,7 @@ name_img = "TEST_1.png"
 img = Image.open(name_img)
 imageToMatrices = np.asarray(img)
 isHorizontal = True
+objects = {}
 
 k = 1
 r = 1
@@ -182,16 +183,19 @@ def create_word():
     doc = Document()
     section = doc.AddSection()
 
-    table = Table(doc, True)
-    table.PreferredWidth = PreferredWidth(WidthType.Percentage, int(100))
+    for e in objects:
+        table = Table(doc, True)
+        table.PreferredWidth = PreferredWidth(WidthType.Percentage, int(100))
 
-    table.TableFormat.Borders.BorderType = BorderStyle.Single
-    table.TableFormat.Borders.Color = Color.get_Black()
+        table.TableFormat.Borders.BorderType = BorderStyle.Single
+        table.TableFormat.Borders.Color = Color.get_Black()
 
-    row = table.AddRow(False, 1)
-    row.Height = 20.0
+        element = objects[e]
+        print(element)
 
-    section.Tables.Add(table)
+        section.Tables.Add(table)
+        pass
+
     doc.SaveToFile(name_document)
     doc.Close()
     return
@@ -220,5 +224,6 @@ if __name__ == '__main__':
     if type_o is TypeElement.LINE_V or type_o is TypeElement.LINE_H:
         el = get_element(p_b)
         filling_elements(el.cells_table)
+        objects[IDElement(el.start_table, TypeElement.TABLE)] = el
 
     create_word()
