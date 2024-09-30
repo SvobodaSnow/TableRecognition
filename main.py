@@ -183,15 +183,22 @@ def create_word():
     doc = Document()
     section = doc.AddSection()
 
-    for e in objects:
+    for o in objects:
         table = Table(doc, True)
         table.PreferredWidth = PreferredWidth(WidthType.Percentage, int(100))
 
         table.TableFormat.Borders.BorderType = BorderStyle.Single
         table.TableFormat.Borders.Color = Color.get_Black()
 
-        element = objects[e]
-        print(element)
+        element = objects[o]
+        table.AddRow(False, element.column)
+
+        for _ in range(element.row - 1):
+            table.AddRow()
+
+        for e in element.cells_table:
+            num_row, num_cell = e.split("|")
+            table.Rows[int(num_row) - 1].Cells[int(num_cell) - 1].AddParagraph().AppendText(element.cells_table[e].content)
 
         section.Tables.Add(table)
         pass
