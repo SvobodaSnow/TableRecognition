@@ -6,6 +6,7 @@ from PIL import Image
 from spire.doc import *
 from spire.doc.common import *
 
+from TableManipulation import add_coll_table
 from entity import *
 from OCR import *
 
@@ -123,7 +124,7 @@ def get_element(start_point):
         start_table=left_top_point
     )
 
-    new_element = {}
+    new_element = [[]]
     i, j = 1, 1
 
     while True:
@@ -131,29 +132,35 @@ def get_element(start_point):
         answer = get_horizontal_node(left_top_point, step)
 
         if answer[1] == TypeElement.CELL:
-            new_element[str(i) + "|" + str(j)] = Cell(left_top_cell=left_top_point, right_top_cell=answer[0])
+            new_element[0].append(Cell(left_top_cell=left_top_point, right_top_cell=answer[0]))
         elif answer[1] == TypeElement.LINE_H:
-            new_element[str(i) + "|" + str(j)] = Line(start_line=left_top_point, end_line=answer[0])
+            new_element[0].append(Line(start_line=left_top_point, end_line=answer[0]))
             return new_element
 
         answer = get_vertical_node(left_top_point, step)
-
         if answer[1] == TypeElement.CELL:
-            new_element[str(i) + "|" + str(j)].left_bottom_cell = answer[0]
+
+            new_element[i - 1][j - 1].left_bottom_cell = answer[0]
+
             end_point = Point(
-                x=new_element[str(i) + "|" + str(j)].right_top_cell.x,
-                y=new_element[str(i) + "|" + str(j)].left_bottom_cell.y
+                x=new_element[i - 1][j - 1].right_top_cell.x,
+                y=new_element[i - 1][j - 1].left_bottom_cell.y
             )
-            new_element[str(i) + "|" + str(j)].right_bottom_cell = end_point
+
+            new_element[i - 1][j - 1].right_bottom_cell = end_point
         elif answer[1] == TypeElement.LINE_V:
-            new_element[str(i) + "|" + str(j)] = Line(start_line=left_top_point, end_line=answer[0])
+            new_element[0].append(Line(start_line=left_top_point, end_line=answer[0]))
             return new_element
 
-        if is_black(imageToMatrices[new_element[str(i) + "|" + str(j)].right_top_cell.y, new_element[str(i) + "|" + str(j)].right_top_cell.x + (step // 2)]):
-            left_top_point = new_element[str(i) + "|" + str(j)].right_top_cell
+        if is_black(imageToMatrices[new_element[i - 1][j - 1].right_top_cell.y, new_element[i - 1][j - 1].right_top_cell.x + (step // 2)]):
+            left_top_point = new_element[i - 1][j - 1].right_top_cell
             j += 1
         else:
             break
+
+    for ln in new_element:
+        for ln1 in ln:
+            print(ln1)
 
     new_table.cells_table = new_element
     new_table.end_table = end_point
@@ -163,17 +170,17 @@ def get_element(start_point):
     return new_table
 
 
-def filling_elements(element: {}):
-    for t in element:
-        cell = element[t]
-        cell.content = string_from_image(
-            img.crop(
-                (cell.left_top_cell.x * 1.01,
-                 cell.left_top_cell.y * 1.01,
-                 cell.right_bottom_cell.x * 1.01,
-                 cell.right_bottom_cell.y * 1.01)
+def filling_elements(element: [[]]):
+    for row in element:
+        for cell in row:
+            cell.content = string_from_image(
+                img.crop(
+                    (cell.left_top_cell.x * 1.01,
+                     cell.left_top_cell.y * 1.01,
+                     cell.right_bottom_cell.x * 1.01,
+                     cell.right_bottom_cell.y * 1.01)
+                )
             )
-        )
     return
 
 
@@ -196,9 +203,9 @@ def create_word():
         for _ in range(element.row - 1):
             table.AddRow()
 
-        for e in element.cells_table:
-            num_row, num_cell = e.split("|")
-            table.Rows[int(num_row) - 1].Cells[int(num_cell) - 1].AddParagraph().AppendText(element.cells_table[e].content)
+        for i in range(len(element.cells_table)):
+            for j in range(len(element.cells_table[i])):
+                table.Rows[i].Cells[j].AddParagraph().AppendText(element.cells_table[i][j].content)
 
         section.Tables.Add(table)
         pass
