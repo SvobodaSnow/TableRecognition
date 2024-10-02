@@ -2,11 +2,9 @@ import math
 from statistics import mean
 
 import numpy as np
-from PIL import Image
 from spire.doc import *
 from spire.doc.common import *
 
-from TableManipulation import add_coll_table
 from entity import *
 from OCR import *
 
@@ -132,9 +130,10 @@ def get_element(start_point):
         answer = get_horizontal_node(left_top_point, step)
 
         if answer[1] == TypeElement.CELL:
-            new_element[0].append(Cell(left_top_cell=left_top_point, right_top_cell=answer[0]))
+            if i
+            new_element[i - 1].append(Cell(left_top_cell=left_top_point, right_top_cell=answer[0]))
         elif answer[1] == TypeElement.LINE_H:
-            new_element[0].append(Line(start_line=left_top_point, end_line=answer[0]))
+            new_element[i - 1].append(Line(start_line=left_top_point, end_line=answer[0]))
             return new_element
 
         answer = get_vertical_node(left_top_point, step)
@@ -156,11 +155,13 @@ def get_element(start_point):
             left_top_point = new_element[i - 1][j - 1].right_top_cell
             j += 1
         else:
-            break
-
-    for ln in new_element:
-        for ln1 in ln:
-            print(ln1)
+            j = 1
+            left_top_point = new_element[i - 1][j - 1].left_bottom_cell
+            if is_black(imageToMatrices[left_top_point.y + (step // 2), left_top_point.x]):
+                i += 1
+                new_element.append([])
+            else:
+                break
 
     new_table.cells_table = new_element
     new_table.end_table = end_point
@@ -239,5 +240,9 @@ if __name__ == '__main__':
         el = get_element(p_b)
         filling_elements(el.cells_table)
         objects[IDElement(el.start_table, TypeElement.TABLE)] = el
+
+    for r in el.cells_table:
+        for c in r:
+            print(c)
 
     create_word()

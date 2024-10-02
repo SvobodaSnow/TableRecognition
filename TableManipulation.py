@@ -23,3 +23,11 @@ def add_coll_table(table: [[]], col_num: int = None, content = None):
         for row in table:
             row.insert(col_num, content)
     return
+
+def add_row_table(table: [[]], row_num: int = None, content = None):
+    columns = len(table[0])
+    if row_num is None:
+        table.append([content for _ in range(columns)])
+    else:
+        table.insert(row_num, [content for _ in range(columns)])
+    return
