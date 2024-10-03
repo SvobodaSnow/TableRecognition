@@ -5,6 +5,7 @@ import numpy as np
 from spire.doc import *
 from spire.doc.common import *
 
+from TableManipulation import add_row_table
 from entity import *
 from OCR import *
 
@@ -130,8 +131,10 @@ def get_element(start_point):
         answer = get_horizontal_node(left_top_point, step)
 
         if answer[1] == TypeElement.CELL:
-            if i
-            new_element[i - 1].append(Cell(left_top_cell=left_top_point, right_top_cell=answer[0]))
+            if i == 1:
+                new_element[i - 1].append(Cell(left_top_cell=left_top_point, right_top_cell=answer[0]))
+            else:
+                new_element[i - 1][j - 1] = Cell(left_top_cell=left_top_point, right_top_cell=answer[0])
         elif answer[1] == TypeElement.LINE_H:
             new_element[i - 1].append(Line(start_line=left_top_point, end_line=answer[0]))
             return new_element
@@ -159,14 +162,14 @@ def get_element(start_point):
             left_top_point = new_element[i - 1][j - 1].left_bottom_cell
             if is_black(imageToMatrices[left_top_point.y + (step // 2), left_top_point.x]):
                 i += 1
-                new_element.append([])
+                add_row_table(new_element)
             else:
                 break
 
     new_table.cells_table = new_element
     new_table.end_table = end_point
-    new_table.column = j
-    new_table.row = i
+    new_table.column = len(new_element[0])
+    new_table.row = len(new_element)
 
     return new_table
 
@@ -206,10 +209,9 @@ def create_word():
 
         for i in range(len(element.cells_table)):
             for j in range(len(element.cells_table[i])):
-                table.Rows[i].Cells[j].AddParagraph().AppendText(element.cells_table[i][j].content)
+                table.Rows[i].Cells[j].AddParagraph().AppendText(element.cells_table[i][j].content).CharacterFormat.LocaleIdASCII = 1049
 
         section.Tables.Add(table)
-        pass
 
     doc.SaveToFile(name_document)
     doc.Close()
