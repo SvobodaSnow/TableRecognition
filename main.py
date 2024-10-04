@@ -9,7 +9,7 @@ from TableManipulation import add_row_table
 from entity import *
 from OCR import *
 
-name_img = "TEST_1.png"
+name_img = "TABLE_TEST_MERGE.png"
 img = Image.open(name_img)
 imageToMatrices = np.asarray(img)
 isHorizontal = True
@@ -37,16 +37,26 @@ def search_black_point(start_point):
 
 
 def analyze(start_point):
-    r_h = round(max(imageToMatrices.shape[1] * 0.01, 10))
-    r_v = round(max(imageToMatrices.shape[0] * 0.01, 10))
+    r_h = round(max(imageToMatrices.shape[1] * 0.01, 40))
+    r_v = round(max(imageToMatrices.shape[0] * 0.01, 40))
     count_black = 0
     for i in range(r_h):
         if not is_black(imageToMatrices[start_point.y, start_point.x + i]):
             break
     else:
         return TypeElement.LINE_H
+    for i in range(r_h):
+        if not is_black(imageToMatrices[start_point.y, start_point.x - i]):
+            break
+    else:
+        return TypeElement.LINE_H
     for i in range(r_v):
         if not is_black(imageToMatrices[start_point.y + i, start_point.x]):
+            break
+    else:
+        return TypeElement.LINE_V
+    for i in range(r_v):
+        if not is_black(imageToMatrices[start_point.y - i, start_point.x]):
             break
     else:
         return TypeElement.LINE_V
@@ -63,15 +73,21 @@ def analyze(start_point):
 def get_horizontal_node(start_node, displacement, direction=Direction.DIRECT):
     delta = direction.value
 
-    x = start_node.x
+    x = start_node.x + displacement
     y = start_node.y
-    y_d = y + displacement
+    y_d_t = y - displacement
+    y_d_d = y + displacement
 
     while True:
         x += delta
         if is_black(imageToMatrices[y, x]):
-            if is_black(imageToMatrices[y_d, x]):
-                t = analyze(Point(x, y_d))
+            f_top = is_black(imageToMatrices[y_d_t, x])
+            f_down = is_black(imageToMatrices[y_d_d, x])
+            if f_top or f_down:
+                if f_down:
+                    t = analyze(Point(x, y_d_d))
+                else:
+                    t = analyze(Point(x, y_d_t))
                 if t is not TypeElement.UNLABELLED and t is not TypeElement.TEXT:
                     return Point(x, y), TypeElement.CELL
         else:
@@ -127,7 +143,7 @@ def get_element(start_point):
     i, j = 1, 1
 
     while True:
-
+        print(i, j)
         answer = get_horizontal_node(left_top_point, step)
 
         if answer[1] == TypeElement.CELL:
@@ -166,6 +182,12 @@ def get_element(start_point):
             else:
                 break
 
+
+    for row in new_element:
+        for cell in row:
+            print(cell)
+    print(len(new_element), len(new_element[0]))
+
     new_table.cells_table = new_element
     new_table.end_table = end_point
     new_table.column = len(new_element[0])
@@ -177,14 +199,15 @@ def get_element(start_point):
 def filling_elements(element: [[]]):
     for row in element:
         for cell in row:
-            cell.content = string_from_image(
-                img.crop(
-                    (cell.left_top_cell.x * 1.01,
-                     cell.left_top_cell.y * 1.01,
-                     cell.right_bottom_cell.x * 1.01,
-                     cell.right_bottom_cell.y * 1.01)
+            if cell is not None:
+                cell.content = string_from_image(
+                    img.crop(
+                        (cell.left_top_cell.x * 1.01,
+                         cell.left_top_cell.y * 1.01,
+                         cell.right_bottom_cell.x * 1.01,
+                         cell.right_bottom_cell.y * 1.01)
+                    )
                 )
-            )
     return
 
 
@@ -209,7 +232,9 @@ def create_word():
 
         for i in range(len(element.cells_table)):
             for j in range(len(element.cells_table[i])):
-                table.Rows[i].Cells[j].AddParagraph().AppendText(element.cells_table[i][j].content).CharacterFormat.LocaleIdASCII = 1049
+                cell = element.cells_table[i][j]
+                if cell is not None:
+                    table.Rows[i].Cells[j].AddParagraph().AppendText(element.cells_table[i][j].content).CharacterFormat.LocaleIdASCII = 1049
 
         section.Tables.Add(table)
 
