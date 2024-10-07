@@ -9,7 +9,8 @@ from TableManipulation import add_row_table
 from entity import *
 from OCR import *
 
-name_img = "TABLE_TEST_MERGE.png"
+# TABLE_TEST_MERGE.png
+name_img = "TEST_LINE.png"
 img = Image.open(name_img)
 imageToMatrices = np.asarray(img)
 isHorizontal = True
@@ -112,7 +113,7 @@ def get_vertical_node(start_node, displacement, direction=Direction.DIRECT):
             return Point(x, y), TypeElement.LINE_V
 
 
-def get_element(start_point):
+def get_element_old(start_point):
     step = 0
     step_x = 0
     step_y = 0
@@ -196,6 +197,45 @@ def get_element(start_point):
     return new_table
 
 
+def get_left_top_point(start_point):
+    step_x = 0
+    step_y = 0
+
+    left_top_point = Point()
+
+    while True:
+        if is_black(imageToMatrices[start_point.y - step_y, start_point.x - step_x]):
+            step_x += 1
+        else:
+            step_y += 1
+            if not is_black(imageToMatrices[start_point.y - step_y, start_point.x - step_x + 1]):
+                left_top_point.y = start_point.y - step_y + 1
+                left_top_point.x = start_point.x - step_x + 1
+                break
+    return left_top_point
+
+
+def get_displacement(start_point):
+    step = 0
+    while True:
+        step += 1
+        if not is_black(imageToMatrices[start_point.y + step, start_point.x + step]):
+            step = step * 2
+            break
+    return step
+
+
+def get_element(start_point):
+    left_top_point = get_left_top_point(start_point)
+    displacement = get_displacement(left_top_point)
+
+    answer = get_horizontal_node(left_top_point, displacement)
+    print(answer)
+    if answer[1] == TypeElement.LINE_H:
+        return Line(left_top_point, answer[0])
+    return TableSerialize()
+
+
 def filling_elements(element: [[]]):
     for row in element:
         for cell in row:
@@ -267,9 +307,5 @@ if __name__ == '__main__':
         el = get_element(p_b)
         filling_elements(el.cells_table)
         objects[IDElement(el.start_table, TypeElement.TABLE)] = el
-
-    for r in el.cells_table:
-        for c in r:
-            print(c)
 
     create_word()
