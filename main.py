@@ -10,7 +10,8 @@ from entity import *
 from OCR import *
 
 # TABLE_TEST_MERGE.png
-name_img = "TEST_LINE.png"
+# TEST_LINE.png
+name_img = "TABLE_TEST_MERGE.png"
 img = Image.open(name_img)
 imageToMatrices = np.asarray(img)
 isHorizontal = True
@@ -137,7 +138,7 @@ def get_element_old(start_point):
             break
 
     new_table = TableSerialize(
-        start_table=left_top_point
+        start=left_top_point
     )
 
     new_element = [[]]
@@ -153,7 +154,7 @@ def get_element_old(start_point):
             else:
                 new_element[i - 1][j - 1] = Cell(left_top_cell=left_top_point, right_top_cell=answer[0])
         elif answer[1] == TypeElement.LINE_H:
-            new_element[i - 1].append(Line(start_line=left_top_point, end_line=answer[0]))
+            new_element[i - 1].append(Line(start=left_top_point, end=answer[0]))
             return new_element
 
         answer = get_vertical_node(left_top_point, step)
@@ -168,7 +169,7 @@ def get_element_old(start_point):
 
             new_element[i - 1][j - 1].right_bottom_cell = end_point
         elif answer[1] == TypeElement.LINE_V:
-            new_element[0].append(Line(start_line=left_top_point, end_line=answer[0]))
+            new_element[0].append(Line(start=left_top_point, end=answer[0]))
             return new_element
 
         if is_black(imageToMatrices[new_element[i - 1][j - 1].right_top_cell.y, new_element[i - 1][j - 1].right_top_cell.x + (step // 2)]):
@@ -190,7 +191,7 @@ def get_element_old(start_point):
     print(len(new_element), len(new_element[0]))
 
     new_table.cells_table = new_element
-    new_table.end_table = end_point
+    new_table.end = end_point
     new_table.column = len(new_element[0])
     new_table.row = len(new_element)
 
@@ -226,14 +227,75 @@ def get_displacement(start_point):
 
 
 def get_element(start_point):
+    # Получение параметров проверки и первой точки
     left_top_point = get_left_top_point(start_point)
     displacement = get_displacement(left_top_point)
 
-    answer = get_horizontal_node(left_top_point, displacement)
-    print(answer)
-    if answer[1] == TypeElement.LINE_H:
-        return Line(left_top_point, answer[0])
-    return TableSerialize()
+    # Получение горизонтальной точки
+    horizontal_point_answer = get_horizontal_node(left_top_point, displacement)
+
+    # Проверка на тип линии
+    if horizontal_point_answer[1] == TypeElement.LINE_H:
+        return Line(left_top_point, horizontal_point_answer[0]), TypeElement.LINE_H
+
+    # Создание новой таблицы
+    new_cells_table = [[]]
+
+    # Заполнение первой ячейки
+    vertical_point_answer = get_vertical_node(left_top_point, displacement)
+
+    new_cells_table[0].append(
+        Cell(
+            left_top_cell=left_top_point,
+            right_top_cell=horizontal_point_answer[0],
+            left_bottom_cell=vertical_point_answer[0],
+            right_bottom_cell=Point(x=horizontal_point_answer[0].x, y=vertical_point_answer[0].y)
+        )
+    )
+
+    # Создание класса таблицы
+    table = TableSerialize(start=left_top_point)
+
+    # Индексы ячеек
+    i, j = 0, 1
+
+    # Переопределение левой точки, как точки отсчета новой ячейки
+    left_top_point = horizontal_point_answer[0]
+
+    # Поиск новых ячеек
+    while True:
+        # Получение правой верхней точки таблицы
+        horizontal_point_answer = get_horizontal_node(left_top_point, displacement)
+
+        # Получение левой нижней точки таблицы
+        vertical_point_answer = get_vertical_node(left_top_point, displacement)
+
+        # Добавление новой ячейки
+        new_cells_table[i].append(
+            Cell(
+                left_top_cell=left_top_point,
+                right_top_cell=horizontal_point_answer[0],
+                left_bottom_cell=vertical_point_answer[0],
+                right_bottom_cell=Point(x=horizontal_point_answer[0].x, y=vertical_point_answer[0].y)
+            )
+        )
+
+        # Проверка на продолжение таблицы
+        if is_black(
+                imageToMatrices[horizontal_point_answer[0].y, horizontal_point_answer[0].x + displacement]
+        ):
+            # Переход на следующую ячейку
+            j += 1
+            left_top_point = horizontal_point_answer[0]
+        else:
+            i += 1
+            break
+
+    table.cells_table = new_cells_table
+
+    print(table)
+
+    return table, TypeElement.TABLE
 
 
 def filling_elements(element: [[]]):
@@ -264,19 +326,21 @@ def create_word():
         table.TableFormat.Borders.BorderType = BorderStyle.Single
         table.TableFormat.Borders.Color = Color.get_Black()
 
-        element = objects[o]
-        table.AddRow(False, element.column)
+        if o.type_element == TypeElement.TABLE:
+            element = objects[o]
+            table.AddRow(False, element.column)
 
-        for _ in range(element.row - 1):
-            table.AddRow()
+            for _ in range(element.row - 1):
+                table.AddRow()
 
-        for i in range(len(element.cells_table)):
-            for j in range(len(element.cells_table[i])):
-                cell = element.cells_table[i][j]
-                if cell is not None:
-                    table.Rows[i].Cells[j].AddParagraph().AppendText(element.cells_table[i][j].content).CharacterFormat.LocaleIdASCII = 1049
+            for i in range(len(element.cells_table)):
+                for j in range(len(element.cells_table[i])):
+                    print(i, j, sep='|')
+                    cell = element.cells_table[i][j]
+                    if cell is not None:
+                        table.Rows[i].Cells[j].AddParagraph().AppendText(element.cells_table[i][j].content).CharacterFormat.LocaleIdASCII = 1049
 
-        section.Tables.Add(table)
+            section.Tables.Add(table)
 
     doc.SaveToFile(name_document)
     doc.Close()
@@ -304,8 +368,9 @@ if __name__ == '__main__':
                 break
 
     if type_o is TypeElement.LINE_V or type_o is TypeElement.LINE_H:
-        el = get_element(p_b)
-        filling_elements(el.cells_table)
-        objects[IDElement(el.start_table, TypeElement.TABLE)] = el
+        el, type = get_element(p_b)
+        if type == TypeElement.TABLE:
+            filling_elements(el.cells_table)
+        objects[IDElement(el.start, type)] = el
 
     create_word()

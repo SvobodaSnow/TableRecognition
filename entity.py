@@ -46,27 +46,27 @@ class Cell:
         self.content = content
 
     def __str__(self):
-        return ("Левая верхняя точка: " + str(self.left_top_cell) + "\n" +
-                "Правая верхняя точка: " + str(self.right_top_cell) + "\n" +
-                "Левая нижняя точка: " + str(self.left_bottom_cell) + "\n" +
-                "Правая нижняя точка: " + str(self.right_bottom_cell) + "\n" +
+        return ("Левая верхняя точка:\t\t" + str(self.left_top_cell) + "\n" +
+                "Правая верхняя точка:\t\t" + str(self.right_top_cell) + "\n" +
+                "Левая нижняя точка:\t\t\t" + str(self.left_bottom_cell) + "\n" +
+                "Правая нижняя точка:\t\t" + str(self.right_bottom_cell) + "\n" +
                 "Тип содержимого: " + str(self.content_type) + "\n" +
                 "Содержимое: " + str(self.content))
 
 
 class TableSerialize:
-    def __init__(self, start_table=Point(), end_table=Point(), cells_table=None, row=1, column=1):
+    def __init__(self, start=Point(), end=Point(), cells_table=None, row=1, column=1):
         if cells_table is None:
             cells_table = {}
-        self.start_table = start_table
-        self.end_table = end_table
+        self.start = start
+        self.end = end
         self.cells_table = cells_table
         self.row = row
         self.column = column
 
     def __str__(self):
-        return ("Начальная точка: " + str(self.start_table) + "\n" +
-                "Конечная точка: " + str(self.end_table) + "\n" +
+        return ("Начальная точка: " + str(self.start) + "\n" +
+                "Конечная точка: " + str(self.end) + "\n" +
                 "Ячейки: \n" + self.cells_table_to_string() + "\n" +
                 "Строк: " + str(self.row) + "\n" +
                 "Колонок: " + str(self.column)
@@ -75,15 +75,19 @@ class TableSerialize:
 
     def cells_table_to_string(self):
         s = ""
-        for e in self.cells_table.keys():
-            s += e + "\n" + str(self.cells_table[e]) + "\n"
+        i, j = 0, 0
+        for row in self.cells_table:
+            i += 1
+            for cell in row:
+                j += 1
+                s += str(i) + "|" + str(j) + "\n" + str(cell) + "\n"
         return s[:-1]
 
 
 class Line:
-    def __init__(self, start_line=Point, end_line=Point()):
-        self.start_line = start_line
-        self.end_line = end_line
+    def __init__(self, start=Point, end=Point()):
+        self.start = start
+        self.end = end
 
 
 class IDElement:
