@@ -8,4 +8,4 @@ pytesseract.tesseract_cmd = path_to_tesseract
 
 def string_from_image(img: Image):
     text = pytesseract.image_to_string(img, lang='rus')
-    return text[:-2]
+    return text[:-1]

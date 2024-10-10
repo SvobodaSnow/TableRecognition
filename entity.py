@@ -15,6 +15,23 @@ class Direction(Enum):
     REVERSE = -1
 
 
+class TypePoint(Enum):
+    POINT_ALL = 0
+    POINT_DOWN = 1
+    POINT_TOP = 2
+    POINT_RIGHT = 3
+    POINT_LEFT = 4
+    POINT_HORIZONTAL = 5
+    POINT_VERTICAL = 6
+
+
+class GroupDirection(Enum):
+    DOWN = 1
+    TOP = 2
+    RIGHT = 3
+    LEFT = 4
+
+
 class Point:
     def __init__(self, x=-1, y=-1):
         self.x = int(x)

@@ -5,14 +5,19 @@ import numpy as np
 from spire.doc import *
 from spire.doc.common import *
 
-from TableManipulation import add_row_table
+from TableManipulation import add_row_table, add_coll_table
 from entity import *
 from OCR import *
+
+# Папки
+path_images = "Initial_test_materials_in_pictures\\"
+path_result = "Result\\"
 
 # TABLE_TEST_MERGE.png
 # TEST_LINE.png
 # TEST_1.png
-name_img = "TEST_1.png"
+# TABLE_SEPARATED.png
+name_img = path_images + "TABLE_SEPARATED.png"
 img = Image.open(name_img)
 imageToMatrices = np.asarray(img)
 isHorizontal = True
@@ -86,13 +91,19 @@ def get_horizontal_node(start_node, displacement, direction=Direction.DIRECT):
         if is_black(imageToMatrices[y, x]):
             f_top = is_black(imageToMatrices[y_d_t, x])
             f_down = is_black(imageToMatrices[y_d_d, x])
-            if f_top or f_down:
-                if f_down:
-                    t = analyze(Point(x, y_d_d))
-                else:
-                    t = analyze(Point(x, y_d_t))
+            if f_top and f_down:
+                t = analyze(Point(x, y_d_d))
                 if t is not TypeElement.UNLABELLED and t is not TypeElement.TEXT:
-                    return Point(x, y), TypeElement.CELL
+                    return Point(x, y), TypePoint.POINT_VERTICAL
+            elif f_down:
+                t = analyze(Point(x, y_d_d))
+                if t is not TypeElement.UNLABELLED and t is not TypeElement.TEXT:
+                    return Point(x, y), TypePoint.POINT_DOWN
+            elif f_top:
+                t = analyze(Point(x, y_d_t))
+                if t is not TypeElement.UNLABELLED and t is not TypeElement.TEXT:
+                    return Point(x, y), TypePoint.POINT_TOP
+
         else:
             return Point(x, y), TypeElement.LINE_H
 
@@ -113,90 +124,6 @@ def get_vertical_node(start_node, displacement, direction=Direction.DIRECT):
                     return Point(x, y), TypeElement.CELL
         else:
             return Point(x, y), TypeElement.LINE_V
-
-
-def get_element_old(start_point):
-    step = 0
-    step_x = 0
-    step_y = 0
-
-    left_top_point = Point()
-
-    while True:
-        if is_black(imageToMatrices[start_point.y - step_y, start_point.x - step_x]):
-            step_x += 1
-        else:
-            step_y += 1
-            if not is_black(imageToMatrices[start_point.y - step_y, start_point.x - step_x + 1]):
-                left_top_point.y = start_point.y - step_y + 1
-                left_top_point.x = start_point.x - step_x + 1
-                break
-
-    while True:
-        step += 1
-        if not is_black(imageToMatrices[left_top_point.y + step, left_top_point.x + step]):
-            step = step * 2
-            break
-
-    new_table = TableSerialize(
-        start=left_top_point
-    )
-
-    new_element = [[]]
-    i, j = 1, 1
-
-    while True:
-        print(i, j)
-        answer = get_horizontal_node(left_top_point, step)
-
-        if answer[1] == TypeElement.CELL:
-            if i == 1:
-                new_element[i - 1].append(Cell(left_top_cell=left_top_point, right_top_cell=answer[0]))
-            else:
-                new_element[i - 1][j - 1] = Cell(left_top_cell=left_top_point, right_top_cell=answer[0])
-        elif answer[1] == TypeElement.LINE_H:
-            new_element[i - 1].append(Line(start=left_top_point, end=answer[0]))
-            return new_element
-
-        answer = get_vertical_node(left_top_point, step)
-        if answer[1] == TypeElement.CELL:
-
-            new_element[i - 1][j - 1].left_bottom_cell = answer[0]
-
-            end_point = Point(
-                x=new_element[i - 1][j - 1].right_top_cell.x,
-                y=new_element[i - 1][j - 1].left_bottom_cell.y
-            )
-
-            new_element[i - 1][j - 1].right_bottom_cell = end_point
-        elif answer[1] == TypeElement.LINE_V:
-            new_element[0].append(Line(start=left_top_point, end=answer[0]))
-            return new_element
-
-        if is_black(imageToMatrices[new_element[i - 1][j - 1].right_top_cell.y, new_element[i - 1][j - 1].right_top_cell.x + (step // 2)]):
-            left_top_point = new_element[i - 1][j - 1].right_top_cell
-            j += 1
-        else:
-            j = 1
-            left_top_point = new_element[i - 1][j - 1].left_bottom_cell
-            if is_black(imageToMatrices[left_top_point.y + (step // 2), left_top_point.x]):
-                i += 1
-                add_row_table(new_element)
-            else:
-                break
-
-
-    for row in new_element:
-        for cell in row:
-            print(cell)
-    print(len(new_element), len(new_element[0]))
-
-    new_table.cells_table = new_element
-    new_table.end = end_point
-    new_table.column = len(new_element[0])
-    new_table.row = len(new_element)
-
-    return new_table
 
 
 def get_left_top_point(start_point):
@@ -287,6 +214,8 @@ def get_element(start_point):
             )
         else:
             # Добавление новой ячейки в остальных строках
+            if horizontal_point_answer[1] == TypePoint.POINT_DOWN:
+                add_coll_table(new_cells_table, i + 1, GroupDirection.LEFT)
             new_cells_table[i][j] = Cell(
                 left_top_cell=left_top_point,
                 right_top_cell=horizontal_point_answer[0],
@@ -319,28 +248,28 @@ def get_element(start_point):
     table.column = len(new_cells_table[0])
     table.end = right_bottom_point
 
-    print(table)
-
     return table, TypeElement.TABLE
 
 
 def filling_elements(element: [[]]):
     for row in element:
         for cell in row:
-            if cell is not None:
+            if cell.__class__ is Cell:
+                crop = img.crop(
+                    (cell.left_top_cell.x * 1.01,
+                     cell.left_top_cell.y * 1.01,
+                     cell.right_bottom_cell.x * 0.99,
+                     cell.right_bottom_cell.y * 0.99
+                     )
+                )
                 cell.content = string_from_image(
-                    img.crop(
-                        (cell.left_top_cell.x * 1.01,
-                         cell.left_top_cell.y * 1.01,
-                         cell.right_bottom_cell.x * 1.01,
-                         cell.right_bottom_cell.y * 1.01)
-                    )
+                    crop
                 )
     return
 
 
 def create_word():
-    name_document = name_img[:name_img.rfind(".")] + ".docx"
+    name_document = path_result + name_img[name_img.rfind("\\"):name_img.rfind(".")] + ".docx"
 
     doc = Document()
     section = doc.AddSection()
@@ -362,8 +291,10 @@ def create_word():
             for i in range(len(element.cells_table)):
                 for j in range(len(element.cells_table[i])):
                     cell = element.cells_table[i][j]
-                    if cell is not None:
+                    if cell.__class__ is Cell:
                         table.Rows[i].Cells[j].AddParagraph().AppendText(element.cells_table[i][j].content).CharacterFormat.LocaleIdASCII = 1049
+                    if cell is GroupDirection.LEFT:
+                        table.ApplyHorizontalMerge(i, j-1, j)
 
             section.Tables.Add(table)
 
