@@ -75,9 +75,10 @@ class TableSerialize:
 
     def cells_table_to_string(self):
         s = ""
-        i, j = 0, 0
+        i = 0
         for row in self.cells_table:
             i += 1
+            j = 0
             for cell in row:
                 j += 1
                 s += str(i) + "|" + str(j) + "\n" + str(cell) + "\n"

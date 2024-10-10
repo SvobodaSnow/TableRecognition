@@ -11,7 +11,8 @@ from OCR import *
 
 # TABLE_TEST_MERGE.png
 # TEST_LINE.png
-name_img = "TABLE_TEST_MERGE.png"
+# TEST_1.png
+name_img = "TEST_1.png"
 img = Image.open(name_img)
 imageToMatrices = np.asarray(img)
 isHorizontal = True
@@ -270,28 +271,53 @@ def get_element(start_point):
         # Получение левой нижней точки таблицы
         vertical_point_answer = get_vertical_node(left_top_point, displacement)
 
+        right_bottom_point = Point(x=horizontal_point_answer[0].x, y=vertical_point_answer[0].y)
+
         # Добавление новой ячейки
-        new_cells_table[i].append(
-            Cell(
+        # Проверка, первая ли строка заполняется или нет
+        if i == 0:
+            # Добавление новой ячейки в конец первой строки
+            new_cells_table[i].append(
+                Cell(
+                    left_top_cell=left_top_point,
+                    right_top_cell=horizontal_point_answer[0],
+                    left_bottom_cell=vertical_point_answer[0],
+                    right_bottom_cell=right_bottom_point
+                )
+            )
+        else:
+            # Добавление новой ячейки в остальных строках
+            new_cells_table[i][j] = Cell(
                 left_top_cell=left_top_point,
                 right_top_cell=horizontal_point_answer[0],
                 left_bottom_cell=vertical_point_answer[0],
-                right_bottom_cell=Point(x=horizontal_point_answer[0].x, y=vertical_point_answer[0].y)
+                right_bottom_cell=right_bottom_point
             )
-        )
 
         # Проверка на продолжение таблицы
         if is_black(
-                imageToMatrices[horizontal_point_answer[0].y, horizontal_point_answer[0].x + displacement]
+            imageToMatrices[horizontal_point_answer[0].y, horizontal_point_answer[0].x + displacement]
         ):
             # Переход на следующую ячейку
             j += 1
             left_top_point = horizontal_point_answer[0]
         else:
-            i += 1
-            break
+            # Проверка на существование следующей строки
+            if is_black(
+                imageToMatrices[right_bottom_point.y + displacement, right_bottom_point.x]
+            ):
+                j = 0
+                cell = new_cells_table[i][j]
+                left_top_point = cell.left_bottom_cell
+                i += 1
+                add_row_table(new_cells_table)
+            else:
+                break
 
     table.cells_table = new_cells_table
+    table.row = len(new_cells_table)
+    table.column = len(new_cells_table[0])
+    table.end = right_bottom_point
 
     print(table)
 
@@ -335,7 +361,6 @@ def create_word():
 
             for i in range(len(element.cells_table)):
                 for j in range(len(element.cells_table[i])):
-                    print(i, j, sep='|')
                     cell = element.cells_table[i][j]
                     if cell is not None:
                         table.Rows[i].Cells[j].AddParagraph().AppendText(element.cells_table[i][j].content).CharacterFormat.LocaleIdASCII = 1049
