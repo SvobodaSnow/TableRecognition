@@ -17,7 +17,8 @@ path_result = "Result\\"
 # TEST_LINE.png
 # TEST_1.png
 # TABLE_SEPARATED.png
-name_img = path_images + "TABLE_SEPARATED.png"
+# TABLE_SEPARATED_MERGE.png
+name_img = path_images + "TABLE_SEPARATED_MERGE.png"
 img = Image.open(name_img)
 imageToMatrices = np.asarray(img)
 isHorizontal = True
@@ -194,12 +195,14 @@ def get_element(start_point):
     while True:
         # Получение правой верхней точки таблицы
         horizontal_point_answer = get_horizontal_node(left_top_point, displacement)
+        print(horizontal_point_answer)
 
         # Получение левой нижней точки таблицы
         vertical_point_answer = get_vertical_node(left_top_point, displacement)
 
         right_bottom_point = Point(x=horizontal_point_answer[0].x, y=vertical_point_answer[0].y)
-
+        # Смещение ячейки
+        displacement_cell = 0
         # Добавление новой ячейки
         # Проверка, первая ли строка заполняется или нет
         if i == 0:
@@ -215,7 +218,13 @@ def get_element(start_point):
         else:
             # Добавление новой ячейки в остальных строках
             if horizontal_point_answer[1] == TypePoint.POINT_DOWN:
-                add_coll_table(new_cells_table, i + 1, GroupDirection.LEFT)
+                add_coll_table(new_cells_table, j + 1, GroupDirection.LEFT)
+            elif horizontal_point_answer[1] == TypePoint.POINT_TOP:
+                while horizontal_point_answer[1] == TypePoint.POINT_TOP:
+                    displacement_cell += 1
+                    new_cells_table[i][j + displacement_cell] = GroupDirection.LEFT
+                    left_next_point = horizontal_point_answer[0]
+                    horizontal_point_answer = get_horizontal_node(left_next_point, displacement)
             new_cells_table[i][j] = Cell(
                 left_top_cell=left_top_point,
                 right_top_cell=horizontal_point_answer[0],
@@ -228,7 +237,7 @@ def get_element(start_point):
             imageToMatrices[horizontal_point_answer[0].y, horizontal_point_answer[0].x + displacement]
         ):
             # Переход на следующую ячейку
-            j += 1
+            j += 1 + displacement_cell
             left_top_point = horizontal_point_answer[0]
         else:
             # Проверка на существование следующей строки
@@ -243,6 +252,19 @@ def get_element(start_point):
             else:
                 break
 
+    i = 0
+    for row in new_cells_table:
+        j = 0
+        for cell in row:
+            print(str(i) + "|" + str(j), cell, sep='\n')
+            j += 1
+        i += 1
+
+    for row in new_cells_table:
+        for cell in row:
+            print(cell.__class__ if cell.__class__ == Cell else cell, end='\t\t')
+        print()
+
     table.cells_table = new_cells_table
     table.row = len(new_cells_table)
     table.column = len(new_cells_table[0])
@@ -252,8 +274,11 @@ def get_element(start_point):
 
 
 def filling_elements(element: [[]]):
+    i = 0
     for row in element:
+        j = 0
         for cell in row:
+            print(i, j, sep='|')
             if cell.__class__ is Cell:
                 crop = img.crop(
                     (cell.left_top_cell.x * 1.01,
@@ -265,6 +290,8 @@ def filling_elements(element: [[]]):
                 cell.content = string_from_image(
                     crop
                 )
+            j += 1
+        i += 1
     return
 
 
@@ -288,13 +315,17 @@ def create_word():
             for _ in range(element.row - 1):
                 table.AddRow()
 
+            merge_horizontal_counter = 0
             for i in range(len(element.cells_table)):
                 for j in range(len(element.cells_table[i])):
                     cell = element.cells_table[i][j]
                     if cell.__class__ is Cell:
                         table.Rows[i].Cells[j].AddParagraph().AppendText(element.cells_table[i][j].content).CharacterFormat.LocaleIdASCII = 1049
                     if cell is GroupDirection.LEFT:
-                        table.ApplyHorizontalMerge(i, j-1, j)
+                        merge_horizontal_counter += 1
+                        if element.cells_table[i][j + 1].__class__ is Cell:
+                            table.ApplyHorizontalMerge(i, j-merge_horizontal_counter, j)
+                            merge_horizontal_counter = 0
 
             section.Tables.Add(table)
 
