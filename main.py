@@ -2,6 +2,7 @@ import math
 from statistics import mean
 
 import numpy as np
+from numpy.testing.print_coercion_tables import print_new_cast_table
 from spire.doc import *
 from spire.doc.common import *
 
@@ -46,8 +47,8 @@ def search_black_point(start_point):
 
 
 def analyze(start_point):
-    r_h = round(max(imageToMatrices.shape[1] * 0.01, 40))
-    r_v = round(max(imageToMatrices.shape[0] * 0.01, 40))
+    r_h = round(max(imageToMatrices.shape[1] * 0.01, 20))
+    r_v = round(max(imageToMatrices.shape[0] * 0.01, 20))
     count_black = 0
     for i in range(r_h):
         if not is_black(imageToMatrices[start_point.y, start_point.x + i]):
@@ -334,6 +335,30 @@ def create_word():
     return
 
 
+def test_function():
+    # Левая верхняя точка:		x: 131		y: 83
+    # Правая верхняя точка:		x: 461		y: 83
+    # Левая нижняя точка:		x: 131		y: 120
+    # Правая нижняя точка:		x: 461		y: 120
+    ds = 2
+    x, y = 131 + ds, 158
+    y_n = y + ds
+    y_v = y - ds
+    while True:
+        x += 1
+        if is_black(imageToMatrices[y_v, x]) or True:
+            print(x, y_v, sep='|', end='\t\t')
+            print(True)
+            print(analyze(Point(x=x, y=y_v)))
+        if is_black(imageToMatrices[y_n, x]):
+            print(x, y_n, sep='|', end='\t\t')
+            print(True)
+            print(analyze(Point(x=x, y=y_n)))
+        if x == 470:
+            break
+    return
+
+
 if __name__ == '__main__':
     r = int((((imageToMatrices.shape[1] * imageToMatrices.shape[0]) * 0.001) ** 0.5) // 2)
     type_o = TypeElement.UNLABELLED
@@ -360,4 +385,5 @@ if __name__ == '__main__':
             filling_elements(el.cells_table)
         objects[IDElement(el.start, type)] = el
 
+    test_function()
     create_word()
