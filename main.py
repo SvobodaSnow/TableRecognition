@@ -19,7 +19,8 @@ path_result = "Result\\"
 # TEST_1.png
 # TABLE_SEPARATED.png
 # TABLE_SEPARATED_MERGE.png
-name_img = path_images + "TABLE_SEPARATED_MERGE.png"
+# TABLE_VERTICAL_SEPARATED.png
+name_img = path_images + "TABLE_VERTICAL_SEPARATED.png"
 img = Image.open(name_img)
 imageToMatrices = np.asarray(img)
 isHorizontal = True
@@ -115,15 +116,26 @@ def get_vertical_node(start_node, displacement, direction=Direction.DIRECT):
 
     x = start_node.x
     y = start_node.y + displacement
-    x_d = x + displacement
+    x_d_r = x + displacement
+    x_d_l = x - displacement
 
     while True:
         y += delta
         if is_black(imageToMatrices[y, x]):
-            if is_black(imageToMatrices[y, x_d]):
-                t = analyze(Point(x_d, y))
+            f_left = is_black(imageToMatrices[y, x_d_l])
+            f_right = is_black(imageToMatrices[y, x_d_r])
+            if f_left and f_right:
+                t = analyze(Point(x_d_r, y))
                 if t is not TypeElement.UNLABELLED and t is not TypeElement.TEXT:
-                    return Point(x, y), TypeElement.CELL
+                    return Point(x, y), TypePoint.POINT_HORIZONTAL
+            elif f_right:
+                t = analyze(Point(x_d_r, y))
+                if t is not TypeElement.UNLABELLED and t is not TypeElement.TEXT:
+                    return Point(x, y), TypePoint.POINT_RIGHT
+            elif f_left:
+                t = analyze(Point(x_d_r, y))
+                if t is not TypeElement.UNLABELLED and t is not TypeElement.TEXT:
+                    return Point(x, y), TypePoint.POINT_LEFT
         else:
             return Point(x, y), TypeElement.LINE_V
 
@@ -194,12 +206,14 @@ def get_element(start_point):
 
     # Поиск новых ячеек
     while True:
+        print(i, j, sep="|")
+        print(new_cells_table)
         # Получение правой верхней точки таблицы
         horizontal_point_answer = get_horizontal_node(left_top_point, displacement)
-        print(horizontal_point_answer)
 
         # Получение левой нижней точки таблицы
         vertical_point_answer = get_vertical_node(left_top_point, displacement)
+        print(vertical_point_answer)
 
         right_bottom_point = Point(x=horizontal_point_answer[0].x, y=vertical_point_answer[0].y)
         # Смещение ячейки
@@ -207,6 +221,9 @@ def get_element(start_point):
         # Добавление новой ячейки
         # Проверка, первая ли строка заполняется или нет
         if i == 0:
+            if vertical_point_answer[1] == TypePoint.POINT_RIGHT and j != 0:
+                print(True)
+                add_row_table(new_cells_table, content=GroupDirection.TOP)
             # Добавление новой ячейки в конец первой строки
             new_cells_table[i].append(
                 Cell(
@@ -221,11 +238,21 @@ def get_element(start_point):
             if horizontal_point_answer[1] == TypePoint.POINT_DOWN:
                 add_coll_table(new_cells_table, j + 1, GroupDirection.LEFT)
             elif horizontal_point_answer[1] == TypePoint.POINT_TOP:
+                last_non_null_cell_i, last_non_null_cell_j = i, j
                 while horizontal_point_answer[1] == TypePoint.POINT_TOP:
                     displacement_cell += 1
+                    print(new_cells_table[last_non_null_cell_i - 1][last_non_null_cell_j + displacement_cell].__class__)
+                    while new_cells_table[last_non_null_cell_i - 1][last_non_null_cell_j + displacement_cell].__class__ is not Cell:
+                        new_cells_table[i][j + displacement_cell] = GroupDirection.LEFT
+                        displacement_cell += 1
                     new_cells_table[i][j + displacement_cell] = GroupDirection.LEFT
                     left_next_point = horizontal_point_answer[0]
                     horizontal_point_answer = get_horizontal_node(left_next_point, displacement)
+
+            if vertical_point_answer[1] == TypePoint.POINT_RIGHT: # and j != 0:
+                print(True)
+                # add_row_table(new_cells_table, content=GroupDirection.TOP)
+
             new_cells_table[i][j] = Cell(
                 left_top_cell=left_top_point,
                 right_top_cell=horizontal_point_answer[0],
@@ -385,5 +412,5 @@ if __name__ == '__main__':
             filling_elements(el.cells_table)
         objects[IDElement(el.start, type)] = el
 
-    test_function()
+    # test_function()
     create_word()
